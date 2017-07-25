@@ -8,11 +8,12 @@ import (
 	"log"
 	"net"
 	"os"
+	"reflect"
 	"runtime"
 	"time"
 )
 
-// Quote by Arthur Schopenhauer ?
+// A quote by Arthur Schopenhauer
 const payload = "A high degree of intellect tends to make a man unsocial."
 
 func main() {
@@ -20,6 +21,8 @@ func main() {
 	fmt.Println("arch=" + runtime.GOARCH)
 
 	fmt.Printf("ParseAddr(\"localhost\") returns %v\n", core.ParseAddr("localhost"))
+	//fmt.Printf("ParseAddr(\"www.google.com\") returns %v\n", core.ParseAddr("www.google.com"))
+	fmt.Printf("ParseAddr(\"127.0.0.1\") returns %v\n", core.ParseAddr("127.0.0.1"))
 
 	//@TODO valid argument or address to ping
 	/*
@@ -40,14 +43,11 @@ func main() {
 	}
 	defer c.Close()
 
-	wm := icmp.Message{
-		Type: ipv4.ICMPTypeEcho,
-		Code: 0,
-		Body: &icmp.Echo{
-			ID: os.Getpid() & 0xffff, Seq: 1,
-			Data: []byte(payload),
-		},
-	}
+	//debug
+	fmt.Printf("typeof c = %v\n", reflect.TypeOf(c))
+
+	wm := core.NewEcho(payload)
+	fmt.Printf("typeof wm = %v\n", reflect.TypeOf(wm))
 	wb, err := wm.Marshal(nil)
 	fmt.Println(wb)
 	if err != nil {
@@ -57,7 +57,7 @@ func main() {
 
 	var t1 time.Time
 nn:
-	for i := 1; i <= 100; i++ {
+	for i := 1; i <= 10; i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
 		fmt.Println(i)
 		t1 = time.Now().Add(time.Second * 6)
