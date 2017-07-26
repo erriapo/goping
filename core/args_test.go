@@ -11,9 +11,20 @@ func TestMain(m *testing.M) {
 	oldLookupIP := lookupIPfunc
 	defer func() { lookupIPfunc = oldLookupIP }()
 	lookupIPfunc = func(host string) (ips []net.IP, err error) {
-		return []net.IP{net.ParseIP("::1"),
-			net.ParseIP("fe80::1"),
-			net.ParseIP("127.0.0.1")}, nil
+		switch host {
+		case "localhost":
+			return []net.IP{net.ParseIP("::1"),
+				net.ParseIP("fe80::1"),
+				net.ParseIP("127.0.0.1")}, nil
+		case "127.0.0.1":
+			return []net.IP{net.ParseIP("127.0.0.1")}, nil
+		case "www.google.com":
+			return []net.IP{net.ParseIP("216.58.193.68")}, nil
+		default:
+			return []net.IP{}, &net.DNSError{Err: "no such host",
+				Name: "placeholder", Server: "127.0.0.1:53"}
+		}
+
 	}
 	code := m.Run()
 	os.Exit(code)
@@ -25,6 +36,14 @@ func TestReturnOnlyIPv4(t *testing.T) {
 	if ipv4.IP.To4() == nil {
 		t.Errorf("expected %v ; got %v\n",
 			net.ParseIP("127.0.0.1"), ipv4)
+	}
+}
+
+func TestReturnDNSError(t *testing.T) {
+	ipv4 := ParseAddr("babihutan")
+	fmt.Printf("%v\n", ipv4)
+	if ipv4 != nil {
+		t.Errorf("expected %v ; got %v\n", nil, ipv4)
 	}
 }
 

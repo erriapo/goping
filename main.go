@@ -20,23 +20,27 @@ func main() {
 	fmt.Println("OS=" + runtime.GOOS)
 	fmt.Println("arch=" + runtime.GOARCH)
 
-	fmt.Printf("ParseAddr(\"localhost\") returns %v\n", core.ParseAddr("localhost"))
-	//fmt.Printf("ParseAddr(\"www.google.com\") returns %v\n", core.ParseAddr("www.google.com"))
-	fmt.Printf("ParseAddr(\"127.0.0.1\") returns %v\n", core.ParseAddr("127.0.0.1"))
+	fmt.Printf("%v\n", os.Args[1:])
+	fmt.Printf("%v\n", reflect.TypeOf(os.Args))
 
-	//@TODO valid argument or address to ping
-	/*
-	   a, errdns := net.LookupIP("www.google.com")
-	   if errdns != nil {
-	       log.Fatal(errdns)
-	   }
-	   fmt.Printf("%v \n", a)
-	*/
+	if len(os.Args) == 1 {
+		fmt.Printf("%s", core.Usage)
+		os.Exit(2)
+	}
 
-	//c, err := icmp.ListenPacket("udp4", "0.0.0.0")
-	// This returns an error when I write to it:
-	// 2017/06/26 19:11:30 write udp 0.0.0.0:28->8.8.8.8:0: sendto: invalid argument
-	//
+	err, help, count, host := core.ParseOption(os.Args[1:])
+	fmt.Printf("%v // %v // %v // %v\n", err, help, count, host)
+
+	if help {
+		fmt.Printf("%s", core.Usage)
+		os.Exit(2)
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(2)
+	}
+
 	c, err := icmp.ListenPacket("ip4:icmp", net.IPv4zero.String())
 	if err != nil {
 		log.Fatal(err)
@@ -57,7 +61,7 @@ func main() {
 
 	var t1 time.Time
 nn:
-	for i := 1; i <= 10; i++ {
+	for i := 1; i <= int(count); i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
 		fmt.Println(i)
 		t1 = time.Now().Add(time.Second * 6)
@@ -66,15 +70,18 @@ nn:
 			fmt.Fprintf(os.Stderr, "Unable to set read & write Deadline.")
 			log.Fatal("Unable to continue. Halted")
 		}
-
+		time.Sleep(time.Second * 1)
 		start := time.Now()
-		if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP("8.8.8.8")}); err != nil {
+		//if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP("8.8.8.8")}); err != nil {
+		if _, err := c.WriteTo(wb, host); err != nil {
 			fmt.Println("..exit from WriteTo")
 			elapsed := time.Since(start)
 			fmt.Printf("..%v\n", elapsed)
 			continue nn
 			//log.Fatal(err)
 		}
+
+		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
 		if err != nil {
 			fmt.Println("$$exit from ReadFrom")
@@ -83,7 +90,7 @@ nn:
 			log.Fatal(err)
 		}
 		elapsed := time.Since(start)
-		fmt.Printf("happy path from %v %v\n", peer, elapsed)
+		fmt.Printf("happy path from %v %v %v read\n", peer, elapsed, n)
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
 		fmt.Println(rm.Type)
@@ -96,7 +103,7 @@ nn:
 		case ipv4.ICMPTypeDestinationUnreachable:
 			log.Printf("got %+v; Destination Net Prohibited", rm)
 		default:
-			log.Println("unexpected reply")
+			log.Printf("DEFAULT got %+v;", rm)
 		}
 		time.Sleep(1 * time.Millisecond)
 	}
