@@ -83,6 +83,15 @@ nn:
 
 		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
+		fmt.Printf("Reading from peer %v\n", peer)
+		if peer == nil {
+			panic("bring a towel")
+		}
+		names, lookupErr := net.LookupAddr(peer.String())
+		if lookupErr == nil {
+			fmt.Printf("\tpeer = %v\n", names)
+		}
+
 		if err != nil {
 			fmt.Println("$$exit from ReadFrom")
 			elapsed := time.Since(start)

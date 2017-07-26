@@ -6,7 +6,7 @@ Usage:
 
 Options:
   -c count    Stop after sending count ECHO_REQUEST packets.
-              Defaults to 5.
+              (OPTIONAL: Defaults to 5.)
   -d host     IPv4 FQDN or numeric address.
   -h          Show this message.
 `
