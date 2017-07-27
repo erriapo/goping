@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/erriapo/icmp/core"
+	"github.com/erriapo/goping/core"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 	"log"
@@ -15,6 +15,8 @@ import (
 
 // A quote by Arthur Schopenhauer
 const payload = "A high degree of intellect tends to make a man unsocial."
+
+var cache = core.NewCache()
 
 func main() {
 	fmt.Println("OS=" + runtime.GOOS)
@@ -36,6 +38,13 @@ func main() {
 		os.Exit(2)
 	}
 
+	// FIXME host
+	//	peerHost, errReversing := cache.Reverse(host)
+	//	if errReversing != nil {
+	//		peerHost = host
+	//	}
+	//	fmt.Printf("\tpeerHost = %v\n", peerHost)
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(2)
@@ -49,17 +58,17 @@ func main() {
 
 	//debug
 	fmt.Printf("typeof c = %v\n", reflect.TypeOf(c))
-
 	wm := core.NewEcho(payload)
-	fmt.Printf("typeof wm = %v\n", reflect.TypeOf(wm))
+	//fmt.Printf("typeof wm = %v\n", reflect.TypeOf(wm))
 	wb, err := wm.Marshal(nil)
-	fmt.Println(wb)
+	//fmt.Println(wb)
 	if err != nil {
 		log.Fatal(err)
 	}
 	rb := make([]byte, 1500)
 
 	var t1 time.Time
+	fmt.Printf("entering loop\n")
 nn:
 	for i := 1; i <= int(count); i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
@@ -77,6 +86,8 @@ nn:
 			fmt.Println("..exit from WriteTo")
 			elapsed := time.Since(start)
 			fmt.Printf("..%v\n", elapsed)
+			// TODO "network is unreachable"
+			fmt.Fprintf(os.Stderr, "connect: Network is unreachable\n")
 			continue nn
 			//log.Fatal(err)
 		}
@@ -84,13 +95,6 @@ nn:
 		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
 		fmt.Printf("Reading from peer %v\n", peer)
-		if peer == nil {
-			panic("bring a towel")
-		}
-		names, lookupErr := net.LookupAddr(peer.String())
-		if lookupErr == nil {
-			fmt.Printf("\tpeer = %v\n", names)
-		}
 
 		if err != nil {
 			fmt.Println("$$exit from ReadFrom")

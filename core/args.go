@@ -14,6 +14,40 @@ import (
 )
 
 var lookupIPfunc = net.LookupIP
+var lookupAddrfunc = net.LookupAddr
+
+type Cache struct {
+	lookupErr error
+	Peer      string
+}
+
+var NoPeerArg = errors.New("peer argument is nil")
+var NoPeerResult = errors.New("peer not resolving")
+
+// New returns a new Cache instance.
+func NewCache() *Cache {
+	return &Cache{}
+}
+
+// Reverse cache reverse IP resolution
+// @TODO caching logic is missing.
+func (c *Cache) Reverse(peer net.Addr) (string, error) {
+	if peer == nil {
+		return "", NoPeerArg
+	}
+	fmt.Printf("peer.String=%v\n", peer.String())
+	names, err := lookupAddrfunc(peer.String())
+	if err == nil {
+		//		fmt.Printf("\tpeer = %v\n", names)
+		if len(names) > 0 {
+			c.Peer = names[0]
+			return c.Peer, nil
+		}
+	} else {
+		c.lookupErr = err
+	}
+	return "", NoPeerResult
+}
 
 // ParseAddr returns the IPv4 address.
 // Potentially could be a nil return value.
@@ -87,7 +121,9 @@ func ParseOption(options []string) (error, bool, uint64, *net.IPAddr) {
 		return nil, bucket.Help, 0, nil
 	}
 
+	fmt.Printf("parseaddr in\n")
 	ipAddr := ParseAddr(bucket.Host)
+	fmt.Printf("parseaddr out\n")
 	if ipAddr == nil {
 		return hostUnknown, false, 0, nil
 	}

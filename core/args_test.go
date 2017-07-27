@@ -9,7 +9,11 @@ import (
 
 func TestMain(m *testing.M) {
 	oldLookupIP := lookupIPfunc
-	defer func() { lookupIPfunc = oldLookupIP }()
+	oldLookupAddr := lookupAddrfunc
+	defer func() {
+		lookupIPfunc = oldLookupIP
+		lookupAddrfunc = oldLookupAddr
+	}()
 	lookupIPfunc = func(host string) (ips []net.IP, err error) {
 		switch host {
 		case "localhost":
@@ -26,8 +30,41 @@ func TestMain(m *testing.M) {
 		}
 
 	}
+	lookupAddrfunc = func(addr string) (names []string, err error) {
+		switch addr {
+		case "127.0.0.1":
+			return []string{"localhost", "frodo"}, nil
+		default:
+			return []string{}, &net.DNSError{Err: "unrecognized address"}
+		}
+	}
+
 	code := m.Run()
 	os.Exit(code)
+}
+
+type MockAddr struct {
+	net.Addr
+}
+
+func (a MockAddr) String() string {
+	return "127.0.0.1"
+}
+
+func TestResolutionToLocalhost(t *testing.T) {
+	cache := NewCache()
+
+	_, err := cache.Reverse(nil)
+	if err != NoPeerArg {
+		t.Errorf("expected %v ; got %v\n", NoPeerArg, err)
+	}
+	host, err := cache.Reverse(MockAddr{})
+	if err != nil {
+		t.Errorf("expected %v ; got %v\n", nil, err)
+	}
+	if host != "localhost" {
+		t.Errorf("expected %v ; got %v\n", "localhost", host)
+	}
 }
 
 func TestReturnOnlyIPv4(t *testing.T) {
