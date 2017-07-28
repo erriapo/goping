@@ -11,6 +11,8 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"sync/atomic"
+	"text/template"
 )
 
 var lookupIPfunc = net.LookupIP
@@ -128,4 +130,45 @@ func ParseOption(options []string) (error, bool, uint64, *net.IPAddr) {
 		return hostUnknown, false, 0, nil
 	}
 	return nil, bucket.Help, bucket.Count, ipAddr
+}
+
+// Counter keeps track of messages sent & received
+type Counter struct {
+	Sent  uint64
+	Recvd uint64
+	Loss  uint32
+	tmpl  *template.Template
+}
+
+func NewCounter() *Counter {
+	t, err := template.New("zzz").Parse("{{.Sent}} packets transmitted, {{.Recvd}} received, {{.Loss}}% packet loss\n")
+	if err != nil {
+		panic(err)
+	}
+	return &Counter{tmpl: t}
+}
+
+func (c *Counter) OnSent() {
+	atomic.AddUint64(&c.Sent, 1)
+}
+
+func (c *Counter) OnReception() {
+	atomic.AddUint64(&c.Recvd, 1)
+}
+
+func (c *Counter) String() {
+	r := atomic.LoadUint64(&c.Recvd)
+	s := atomic.LoadUint64(&c.Sent)
+	if r == 0 {
+		if s != 0 {
+			c.Loss = 100
+		}
+		_ = c.tmpl.Execute(os.Stdout, c)
+	} else {
+		if s != 0 {
+			// make calculation here
+			c.Loss = uint32(((float32(s) - float32(r)) / float32(s)) * float32(100))
+		}
+		_ = c.tmpl.Execute(os.Stdout, c)
+	}
 }

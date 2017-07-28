@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"reflect"
 	"runtime"
 	"time"
@@ -17,6 +18,7 @@ import (
 const payload = "A high degree of intellect tends to make a man unsocial."
 
 var cache = core.NewCache()
+var counter = core.NewCounter()
 
 func main() {
 	fmt.Println("OS=" + runtime.GOOS)
@@ -39,16 +41,25 @@ func main() {
 	}
 
 	// FIXME host
-	//	peerHost, errReversing := cache.Reverse(host)
-	//	if errReversing != nil {
+	peerHost, _ := cache.Reverse(host)
+	//if errReversing != nil {
 	//		peerHost = host
-	//	}
-	//	fmt.Printf("\tpeerHost = %v\n", peerHost)
+	//}
+	fmt.Printf("\tpeerHost = %v\n", peerHost)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(2)
 	}
+
+	exitchan := make(chan os.Signal, 1)
+	signal.Notify(exitchan, os.Interrupt)
+	go func() {
+		<-exitchan
+		fmt.Println("caught CTRL+C")
+		counter.String()
+		os.Exit(1)
+	}()
 
 	c, err := icmp.ListenPacket("ip4:icmp", net.IPv4zero.String())
 	if err != nil {
@@ -68,13 +79,12 @@ func main() {
 	rb := make([]byte, 1500)
 
 	var t1 time.Time
-	fmt.Printf("entering loop\n")
 nn:
 	for i := 1; i <= int(count); i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
 		fmt.Println(i)
 		t1 = time.Now().Add(time.Second * 6)
-		fmt.Printf("timeout at %v\n", t1)
+		//fmt.Printf("timeout at %v\n", t1)
 		if err := c.SetDeadline(t1); err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to set read & write Deadline.")
 			log.Fatal("Unable to continue. Halted")
@@ -91,19 +101,31 @@ nn:
 			continue nn
 			//log.Fatal(err)
 		}
+		counter.OnSent()
 
 		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
-		fmt.Printf("Reading from peer %v\n", peer)
+		//fmt.Printf("Reading from peer %v\n", peer)
+		go func() {
+			if len(peerHost) != 0 {
+				fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, peerHost)
+			} else {
+				fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, peer)
+			}
+		}()
 
 		if err != nil {
 			fmt.Println("$$exit from ReadFrom")
 			elapsed := time.Since(start)
 			fmt.Printf("$$%v\n", elapsed)
-			log.Fatal(err)
+			continue nn
+			//log.Fatal(err)
 		}
 		elapsed := time.Since(start)
-		fmt.Printf("happy path from %v %v %v read\n", peer, elapsed, n)
+		counter.OnReception()
+
+		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v ms\n", n, peer, i, elapsed)
+		//fmt.Printf("happy path from %v %v %v read\n", peer, elapsed, n)
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
 		fmt.Println(rm.Type)
@@ -120,6 +142,7 @@ nn:
 		}
 		time.Sleep(1 * time.Millisecond)
 	}
+	counter.String()
 	os.Exit(run())
 }
 
