@@ -104,3 +104,9 @@ func BenchmarkParseLocalhostIpv6(b *testing.B) {
 		ParseAddr("::1")
 	}
 }
+
+func BenchmarkReverseLookup(b *testing.B) {
+	cache := NewCache()
+	b.ResetTimer()
+	cache.Reverse(MockAddr{})
+}

@@ -19,6 +19,21 @@ const payload = "A high degree of intellect tends to make a man unsocial."
 
 var cache = core.NewCache()
 var counter = core.NewCounter()
+var pingHeading bool
+
+func choose(option1 string, option2 net.Addr) string {
+	if len(option1) != 0 {
+		return option1
+	}
+	if option2 != nil {
+		return option2.String()
+	}
+	return "unknown"
+}
+
+func heading(node string) string {
+	return fmt.Sprintf("\n--- %[1]s ping statistics ---", node)
+}
 
 func main() {
 	fmt.Println("OS=" + runtime.GOOS)
@@ -45,7 +60,7 @@ func main() {
 	//if errReversing != nil {
 	//		peerHost = host
 	//}
-	fmt.Printf("\tpeerHost = %v\n", peerHost)
+	fmt.Printf("\t!!peerHost = %v\n", peerHost)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -53,11 +68,10 @@ func main() {
 	}
 
 	exitchan := make(chan os.Signal, 1)
-	signal.Notify(exitchan, os.Interrupt)
+	signal.Notify(exitchan, os.Interrupt) // SIGINT
 	go func() {
 		<-exitchan
-		fmt.Println("caught CTRL+C")
-		counter.String()
+		counter.String(heading(choose(peerHost, host)))
 		os.Exit(1)
 	}()
 
@@ -67,24 +81,20 @@ func main() {
 	}
 	defer c.Close()
 
-	//debug
-	fmt.Printf("typeof c = %v\n", reflect.TypeOf(c))
 	wm := core.NewEcho(payload)
-	//fmt.Printf("typeof wm = %v\n", reflect.TypeOf(wm))
 	wb, err := wm.Marshal(nil)
-	//fmt.Println(wb)
 	if err != nil {
 		log.Fatal(err)
 	}
 	rb := make([]byte, 1500)
 
 	var t1 time.Time
+	var peer2 net.Addr
 nn:
 	for i := 1; i <= int(count); i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
-		fmt.Println(i)
+		fmt.Println(".")
 		t1 = time.Now().Add(time.Second * 6)
-		//fmt.Printf("timeout at %v\n", t1)
 		if err := c.SetDeadline(t1); err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to set read & write Deadline.")
 			log.Fatal("Unable to continue. Halted")
@@ -105,44 +115,44 @@ nn:
 
 		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
-		//fmt.Printf("Reading from peer %v\n", peer)
-		go func() {
-			if len(peerHost) != 0 {
-				fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, peerHost)
-			} else {
-				fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, peer)
-			}
-		}()
+		if peer != nil {
+			peer2 = peer
+		}
+
+		if !pingHeading {
+			fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, choose(peerHost, peer))
+			pingHeading = true
+		}
 
 		if err != nil {
-			fmt.Println("$$exit from ReadFrom")
+			// TODO print no reponse for packet #n
+			fmt.Printf("%v bytes from (%v): icmp_req=%v No response\n", 0, peer2, i)
 			elapsed := time.Since(start)
 			fmt.Printf("$$%v\n", elapsed)
 			continue nn
-			//log.Fatal(err)
 		}
 		elapsed := time.Since(start)
-		counter.OnReception()
 
-		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v ms\n", n, peer, i, elapsed)
-		//fmt.Printf("happy path from %v %v %v read\n", peer, elapsed, n)
+		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
-		fmt.Println(rm.Type)
 		if err != nil {
 			log.Fatal(err)
 		}
 		switch rm.Type {
+		case ipv4.ICMPTypeEcho:
+			log.Printf("got %+v; echo", rm)
 		case ipv4.ICMPTypeEchoReply:
+			counter.OnReception()
 			log.Printf("got %+v; want echo reply", rm)
 		case ipv4.ICMPTypeDestinationUnreachable:
 			log.Printf("got %+v; Destination Net Prohibited", rm)
 		default:
 			log.Printf("DEFAULT got %+v;", rm)
 		}
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond) // pause between sending each ping
 	}
-	counter.String()
+	counter.String(heading(choose(peerHost, peer2)))
 	os.Exit(run())
 }
 

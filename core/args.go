@@ -10,7 +10,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"reflect"
 	"sync/atomic"
 	"text/template"
 )
@@ -20,7 +19,7 @@ var lookupAddrfunc = net.LookupAddr
 
 type Cache struct {
 	lookupErr error
-	Peer      string
+	m         map[string]string
 }
 
 var NoPeerArg = errors.New("peer argument is nil")
@@ -28,7 +27,9 @@ var NoPeerResult = errors.New("peer not resolving")
 
 // New returns a new Cache instance.
 func NewCache() *Cache {
-	return &Cache{}
+	return &Cache{
+		m: make(map[string]string),
+	}
 }
 
 // Reverse cache reverse IP resolution
@@ -37,15 +38,23 @@ func (c *Cache) Reverse(peer net.Addr) (string, error) {
 	if peer == nil {
 		return "", NoPeerArg
 	}
-	fmt.Printf("peer.String=%v\n", peer.String())
+	//fmt.Printf("peer.String=%v\n", peer.String())
+
+	// have we seen it already?
+	v, ok := c.m[peer.String()]
+	if ok {
+		return v, nil
+	}
+
 	names, err := lookupAddrfunc(peer.String())
 	if err == nil {
-		//		fmt.Printf("\tpeer = %v\n", names)
+		//fmt.Printf("\tpeer = %v\n", names)
 		if len(names) > 0 {
-			c.Peer = names[0]
-			return c.Peer, nil
+			c.m[peer.String()] = names[0]
+			return c.m[peer.String()], nil
 		}
 	} else {
+		//TODO what is this for?
 		c.lookupErr = err
 	}
 	return "", NoPeerResult
@@ -68,8 +77,8 @@ func ParseAddr(input string) *net.IPAddr {
 		return nil
 	}
 
-	fmt.Printf("%v\n", candidates)
-	fmt.Printf("type 0 = %v\n", reflect.TypeOf(candidates[0]))
+	//fmt.Printf("%v\n", candidates)
+	//fmt.Printf("type 0 = %v\n", reflect.TypeOf(candidates[0]))
 
 	var result net.IP
 	for _, candidate := range candidates {
@@ -156,19 +165,18 @@ func (c *Counter) OnReception() {
 	atomic.AddUint64(&c.Recvd, 1)
 }
 
-func (c *Counter) String() {
+func (c *Counter) String(header string) {
 	r := atomic.LoadUint64(&c.Recvd)
 	s := atomic.LoadUint64(&c.Sent)
 	if r == 0 {
 		if s != 0 {
 			c.Loss = 100
 		}
-		_ = c.tmpl.Execute(os.Stdout, c)
 	} else {
 		if s != 0 {
-			// make calculation here
 			c.Loss = uint32(((float32(s) - float32(r)) / float32(s)) * float32(100))
 		}
-		_ = c.tmpl.Execute(os.Stdout, c)
 	}
+	fmt.Println(header)
+	_ = c.tmpl.Execute(os.Stdout, c)
 }
