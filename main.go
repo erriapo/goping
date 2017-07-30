@@ -9,13 +9,14 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"reflect"
-	"runtime"
 	"time"
 )
 
 // A quote by Arthur Schopenhauer
 const payload = "A high degree of intellect tends to make a man unsocial."
+
+// milliseconds to pause between sending each ICMP request
+const pause = 1
 
 var cache = core.NewCache()
 var counter = core.NewCounter()
@@ -36,37 +37,31 @@ func heading(node string) string {
 }
 
 func main() {
-	fmt.Println("OS=" + runtime.GOOS)
-	fmt.Println("arch=" + runtime.GOARCH)
-
-	fmt.Printf("%v\n", os.Args[1:])
-	fmt.Printf("%v\n", reflect.TypeOf(os.Args))
-
 	if len(os.Args) == 1 {
-		fmt.Printf("%s", core.Usage)
+		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
 	}
 
-	err, help, count, host := core.ParseOption(os.Args[1:])
-	fmt.Printf("%v // %v // %v // %v\n", err, help, count, host)
+	err, help, verbose, count, host := core.ParseOption(os.Args[1:])
 
 	if help {
-		fmt.Printf("%s", core.Usage)
+		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
 	}
-
-	// FIXME host
-	peerHost, _ := cache.Reverse(host)
-	//if errReversing != nil {
-	//		peerHost = host
-	//}
-	fmt.Printf("\t!!peerHost = %v\n", peerHost)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintf(os.Stderr, "Aborted: %v\n", err)
 		os.Exit(2)
 	}
 
+	// It is safe to ignore the error as we will fallback
+	// to the supplied Host
+	peerHost, _ := cache.Reverse(host)
+	if verbose {
+		fmt.Printf("Reversed lookup of supplied host = %v\n", peerHost)
+	}
+
+	// trap CTRL+C
 	exitchan := make(chan os.Signal, 1)
 	signal.Notify(exitchan, os.Interrupt) // SIGINT
 	go func() {
@@ -93,23 +88,17 @@ func main() {
 nn:
 	for i := 1; i <= int(count); i++ {
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
-		fmt.Println(".")
 		t1 = time.Now().Add(time.Second * 6)
 		if err := c.SetDeadline(t1); err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to set read & write Deadline.")
 			log.Fatal("Unable to continue. Halted")
 		}
-		time.Sleep(time.Second * 1)
+		time.Sleep(pause * time.Second)
 		start := time.Now()
 		//if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP("8.8.8.8")}); err != nil {
 		if _, err := c.WriteTo(wb, host); err != nil {
-			fmt.Println("..exit from WriteTo")
-			elapsed := time.Since(start)
-			fmt.Printf("..%v\n", elapsed)
-			// TODO "network is unreachable"
-			fmt.Fprintf(os.Stderr, "connect: Network is unreachable\n")
+			fmt.Fprintf(os.Stderr, "%d connect: Network is unreachable\n", i)
 			continue nn
-			//log.Fatal(err)
 		}
 		counter.OnSent()
 
@@ -141,16 +130,23 @@ nn:
 		}
 		switch rm.Type {
 		case ipv4.ICMPTypeEcho:
-			log.Printf("got %+v; echo", rm)
+			if verbose {
+				log.Printf("\t%+v; echo", rm)
+			}
 		case ipv4.ICMPTypeEchoReply:
 			counter.OnReception()
-			log.Printf("got %+v; want echo reply", rm)
+			if verbose {
+				log.Printf("\t%+v; echo reply", rm)
+			}
 		case ipv4.ICMPTypeDestinationUnreachable:
-			log.Printf("got %+v; Destination Net Prohibited", rm)
+			if verbose {
+				log.Printf("\t%+v; Destination Net Prohibited", rm)
+			}
 		default:
-			log.Printf("DEFAULT got %+v;", rm)
+			if verbose {
+				log.Printf("\tunexpected %+v;", rm)
+			}
 		}
-		time.Sleep(1 * time.Millisecond) // pause between sending each ping
 	}
 	counter.String(heading(choose(peerHost, peer2)))
 	os.Exit(run())

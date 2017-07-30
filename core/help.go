@@ -9,4 +9,5 @@ Options:
               (OPTIONAL: Defaults to 5.)
   -d host     IPv4 FQDN or numeric address.
   -h          Show this message.
+  -v          Increase verbosity.
 `
