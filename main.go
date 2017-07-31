@@ -76,6 +76,9 @@ func main() {
 	go func() {
 		<-exitchan
 		counter.String(heading(choose(peerHost, host)))
+		if counter.Loss > 0 && counter.Loss < 100 {
+			fmt.Printf("%s\n", thirdparty.Format(accountant))
+		}
 		os.Exit(1)
 	}()
 
@@ -133,7 +136,7 @@ nn:
 
 		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
 		if verbose {
-			fmt.Printf("\t%s ns\n", elapsed.Nanoseconds())
+			fmt.Printf("RTT %d ns\n", elapsed.Nanoseconds())
 		}
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
@@ -162,7 +165,7 @@ nn:
 		}
 	}
 	counter.String(heading(choose(peerHost, peer2)))
-	if counter.Loss != 100 {
+	if counter.Loss > 0 && counter.Loss < 100 {
 		fmt.Printf("%s\n", thirdparty.Format(accountant))
 	}
 	os.Exit(0)

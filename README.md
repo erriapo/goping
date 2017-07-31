@@ -36,6 +36,6 @@ Or if you prefer, you can execute it set-uid root.
 
 ## TODOs
 
-* Fix elephant-in-the-room bug [#2](../../issues/2)
+* Fix bug [#2](../../issues/2)
 * Better test code coverage.
 * Support IPV6 addresses.
