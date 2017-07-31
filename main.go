@@ -6,6 +6,8 @@ package main
 import (
 	"fmt"
 	"github.com/erriapo/goping/core"
+	"github.com/erriapo/goping/thirdparty"
+	"github.com/erriapo/stats"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 	"log"
@@ -21,6 +23,7 @@ const payload = "A high degree of intellect tends to make a man unsocial."
 // milliseconds to pause between sending each ICMP request
 const pause = 1
 
+var accountant = stats.NewSink()
 var cache = core.NewCache()
 var counter = core.NewCounter()
 var pingHeading bool
@@ -37,6 +40,10 @@ func choose(option1 string, option2 net.Addr) string {
 
 func heading(node string) string {
 	return fmt.Sprintf("\n--- %[1]s ping statistics ---", node)
+}
+
+func nanoToMilli(d time.Duration) float64 {
+	return float64(d.Nanoseconds()) / float64(1000000)
 }
 
 func main() {
@@ -125,6 +132,9 @@ nn:
 		elapsed := time.Since(start)
 
 		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
+		if verbose {
+			fmt.Printf("\t%s ns\n", elapsed.Nanoseconds())
+		}
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
 		if err != nil {
@@ -137,6 +147,7 @@ nn:
 			}
 		case ipv4.ICMPTypeEchoReply:
 			counter.OnReception()
+			accountant.Push(nanoToMilli(elapsed))
 			if verbose {
 				log.Printf("\t%+v; echo reply", rm)
 			}
@@ -151,9 +162,8 @@ nn:
 		}
 	}
 	counter.String(heading(choose(peerHost, peer2)))
-	os.Exit(run())
-}
-
-func run() int {
-	return 0
+	if counter.Loss != 100 {
+		fmt.Printf("%s\n", thirdparty.Format(accountant))
+	}
+	os.Exit(0)
 }

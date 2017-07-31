@@ -176,7 +176,8 @@ func (c *Counter) OnReception() {
 	atomic.AddUint64(&c.Recvd, 1)
 }
 
-func (c *Counter) String(header string) {
+// CalculateLoss side effect is to calculate the Loss percentage.
+func (c *Counter) CalculateLoss() {
 	r := atomic.LoadUint64(&c.Recvd)
 	s := atomic.LoadUint64(&c.Sent)
 	if r == 0 {
@@ -188,6 +189,10 @@ func (c *Counter) String(header string) {
 			c.Loss = uint32(((float32(s) - float32(r)) / float32(s)) * float32(100))
 		}
 	}
+}
+
+func (c *Counter) String(header string) {
+	c.CalculateLoss()
 	fmt.Println(header)
 	_ = c.tmpl.Execute(os.Stdout, c)
 }

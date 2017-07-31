@@ -1,0 +1,10 @@
+package: .
+import:
+- package: github.com/erriapo/goping
+  subpackages:
+  - core
+- package: golang.org/x/net
+  subpackages:
+  - icmp
+  - ipv4
+- package: github.com/erriapo/stats

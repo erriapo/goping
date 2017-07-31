@@ -16,6 +16,7 @@ test:
 fmt:
 	go fmt .
 	go fmt ./core
+	go fmt ./thirdparty
 
 benchmark:
 	go test ./core -bench .
