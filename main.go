@@ -1,3 +1,6 @@
+// Copyright 2017 Gavin Bong. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
 package main
 
 import (
@@ -42,8 +45,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	err, help, verbose, count, host := core.ParseOption(os.Args[1:])
-
+	help, verbose, count, host, err := core.ParseOption(os.Args[1:])
 	if help {
 		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
@@ -114,10 +116,10 @@ nn:
 		}
 
 		if err != nil {
-			// TODO print no reponse for packet #n
-			fmt.Printf("%v bytes from (%v): icmp_req=%v No response\n", 0, peer2, i)
-			elapsed := time.Since(start)
-			fmt.Printf("$$%v\n", elapsed)
+			fmt.Printf("%v bytes from (%v): icmp_req=%v No response\n", 0, choose(peerHost, host), i)
+			if verbose {
+				fmt.Fprintf(os.Stderr, "\t%+v\n", err)
+			}
 			continue nn
 		}
 		elapsed := time.Since(start)

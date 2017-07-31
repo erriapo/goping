@@ -1,3 +1,6 @@
+// Copyright 2017 Gavin Bong. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
 package core
 
 import (
@@ -55,8 +58,8 @@ func TestResolutionToLocalhost(t *testing.T) {
 	cache := NewCache()
 
 	_, err := cache.Reverse(nil)
-	if err != NoPeerArg {
-		t.Errorf("expected %v ; got %v\n", NoPeerArg, err)
+	if err != ErrMissingPeer {
+		t.Errorf("expected %v ; got %v\n", ErrMissingPeer, err)
 	}
 	host, err := cache.Reverse(MockAddr{})
 	if err != nil {

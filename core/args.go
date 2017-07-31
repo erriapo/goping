@@ -1,3 +1,8 @@
+// Copyright 2017 Gavin Bong. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
+// Package core provides command line parsing & DNS lookup conveniences.
 package core
 
 import (
@@ -23,13 +28,13 @@ type Cache struct {
 	m map[string]string
 }
 
-// NoPeerArg means the client provided nil as a peer argument.
-var NoPeerArg = errors.New("peer argument is nil")
+// ErrMissingPeer means the client provided nil as a peer argument.
+var ErrMissingPeer = errors.New("peer argument is nil")
 
-// NoPeerResult means no reverse IP for the peer was found.
-var NoPeerResult = errors.New("peer not resolving")
+// ErrPeerNotResolving means no reverse IP for the peer was found.
+var ErrPeerNotResolving = errors.New("peer not resolving")
 
-// New returns a new Cache instance.
+// NewCache returns a new Cache instance.
 func NewCache() *Cache {
 	return &Cache{
 		m: make(map[string]string),
@@ -39,7 +44,7 @@ func NewCache() *Cache {
 // Reverse caches reverse IP resolution
 func (c *Cache) Reverse(peer net.Addr) (string, error) {
 	if peer == nil {
-		return "", NoPeerArg
+		return "", ErrMissingPeer
 	}
 
 	v, ok := c.m[peer.String()]
@@ -56,7 +61,7 @@ func (c *Cache) Reverse(peer net.Addr) (string, error) {
 		}
 	}
 
-	return "", NoPeerResult
+	return "", ErrPeerNotResolving
 }
 
 // ParseAddr returns the IPv4 address.
@@ -103,7 +108,7 @@ func NewEcho(payload string) icmp.Message {
 	return wm
 }
 
-var hostUnknown = errors.New("Unknown host")
+var errUnknownHost = errors.New("Unknown host")
 
 // Arg holds the command line arguments.
 type Arg struct {
@@ -113,7 +118,8 @@ type Arg struct {
 	Count uint64
 }
 
-func ParseOption(options []string) (error, bool, bool, uint64, *net.IPAddr) {
+// ParseOption parses command line arguments
+func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	bucket := new(Arg)
 
 	f := flag.NewFlagSet("goping", flag.ContinueOnError)
@@ -124,11 +130,11 @@ func ParseOption(options []string) (error, bool, bool, uint64, *net.IPAddr) {
 	f.StringVar(&bucket.Host, "d", bucket.Host, "")
 
 	if err := f.Parse(options); err != nil {
-		return err, false, false, 0, nil
+		return false, false, 0, nil, err
 	}
 
 	if bucket.Help {
-		return nil, bucket.Help, bucket.Extra, 0, nil
+		return bucket.Help, bucket.Extra, 0, nil, nil
 	}
 
 	start := time.Now()
@@ -138,9 +144,9 @@ func ParseOption(options []string) (error, bool, bool, uint64, *net.IPAddr) {
 	fmt.Fprintf(os.Stderr, "Reverse lookup took %v\n\n", elapsed)
 
 	if ipAddr == nil {
-		return hostUnknown, false, bucket.Extra, 0, nil
+		return false, bucket.Extra, 0, nil, errUnknownHost
 	}
-	return nil, bucket.Help, bucket.Extra, bucket.Count, ipAddr
+	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, nil
 }
 
 // Counter keeps track of messages sent & received
@@ -151,6 +157,7 @@ type Counter struct {
 	tmpl  *template.Template
 }
 
+// NewCounter constructs a new Counter
 func NewCounter() *Counter {
 	t, err := template.New("stat1").Parse("{{.Sent}} packets transmitted, {{.Recvd}} received, {{.Loss}}% packet loss\n")
 	if err != nil {
@@ -159,10 +166,12 @@ func NewCounter() *Counter {
 	return &Counter{tmpl: t}
 }
 
+// OnSent remembers how many ICMP Echo was sent.
 func (c *Counter) OnSent() {
 	atomic.AddUint64(&c.Sent, 1)
 }
 
+// OnReception remembers how many ICMP Echo Reply was received.
 func (c *Counter) OnReception() {
 	atomic.AddUint64(&c.Recvd, 1)
 }
