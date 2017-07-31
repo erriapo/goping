@@ -1,9 +1,8 @@
-[![Code Climate](https://codeclimate.com/github/erriapo/goping/badges/gpa.svg)](https://codeclimate.com/github/erriapo/goping)
-
 ## Dependencies
 
-* golang.org/x/net
-* github.com/erriapo/stats 
+* [golang.org/x/net/icmp](https://godoc.org/golang.org/x/net/icmp)
+* [golang.org/x/net/ipv4](https://godoc.org/golang.org/x/net/ipv4)
+* [github.com/erriapo/stats](https://github.com/erriapo/stats)
 
 ## Usage example
 
