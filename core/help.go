@@ -5,6 +5,10 @@ package core
 
 // Usage is the help blurb
 var Usage = `
+Author:  Gavin (rubycoder@gmail.com)
+Github:  https://github.com/erriapo/goping
+Twitter: @GavinGastown3
+
 Usage:
   goping -c 2 -d www.google.com
 
