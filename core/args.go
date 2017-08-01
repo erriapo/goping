@@ -108,8 +108,9 @@ func NewEcho(payload string) icmp.Message {
 	return wm
 }
 
-// TODO this should be exported!
-var errUnknownHost = errors.New("Unknown host")
+// ErrUnknownHost means we cannot parse
+// the IP address or the FQDN that was provided.
+var ErrUnknownHost = errors.New("Unknown host")
 
 // Arg holds the command line arguments.
 type Arg struct {
@@ -122,7 +123,7 @@ type Arg struct {
 // ParseOption parses command line arguments
 func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	if options == nil || len(options) == 0 {
-		return false, false, 0, nil, errUnknownHost
+		return false, false, 0, nil, ErrUnknownHost
 	}
 
 	bucket := new(Arg)
@@ -149,7 +150,7 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	fmt.Fprintf(os.Stderr, "Reverse lookup took %v\n\n", elapsed)
 
 	if ipAddr == nil {
-		return false, bucket.Extra, 0, nil, errUnknownHost
+		return false, bucket.Extra, 0, nil, ErrUnknownHost
 	}
 	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, nil
 }

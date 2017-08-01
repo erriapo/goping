@@ -1,0 +1,25 @@
+gavin@frodo:$  goping -d 8.8.8.8
+.Reverse lookup took 152.296µs
+
+1 connect: Network is unreachable
+2 connect: Network is unreachable
+3 connect: Network is unreachable
+4 connect: Network is unreachable
+5 connect: Network is unreachable
+
+--- unknown ping statistics ---
+0 packets transmitted, 0 received, 0% packet loss
+
+
+gavin@frodo:$  goping -d www.google.ca
+.Reverse lookup took 169.446426ms
+
+PING 216.58.193.67 (sea15s07-in-f3.1e100.net.) 56(64) bytes of data.
+0 bytes from (sea15s07-in-f3.1e100.net.): icmp_req=1 No response
+0 bytes from (sea15s07-in-f3.1e100.net.): icmp_req=2 No response
+0 bytes from (sea15s07-in-f3.1e100.net.): icmp_req=3 No response
+0 bytes from (sea15s07-in-f3.1e100.net.): icmp_req=4 No response
+0 bytes from (sea15s07-in-f3.1e100.net.): icmp_req=5 No response
+
+--- sea15s07-in-f3.1e100.net. ping statistics ---
+5 packets transmitted, 0 received, 100% packet loss
