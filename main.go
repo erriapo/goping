@@ -47,11 +47,6 @@ func nanoToMilli(d time.Duration) float64 {
 }
 
 func main() {
-	if len(os.Args) == 1 {
-		fmt.Fprintf(os.Stderr, "%s", core.Usage)
-		os.Exit(2)
-	}
-
 	help, verbose, count, host, err := core.ParseOption(os.Args[1:])
 	if help {
 		fmt.Fprintf(os.Stderr, "%s", core.Usage)
@@ -60,6 +55,7 @@ func main() {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Aborted: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
 	}
 
@@ -76,7 +72,7 @@ func main() {
 	go func() {
 		<-exitchan
 		counter.String(heading(choose(peerHost, host)))
-		if counter.Loss > 0 && counter.Loss < 100 {
+		if counter.Sent > 0 && counter.Recvd > 0 && counter.Recvd <= counter.Sent {
 			fmt.Printf("%s\n", thirdparty.Format(accountant))
 		}
 		os.Exit(1)
@@ -155,8 +151,9 @@ nn:
 				log.Printf("\t%+v; echo reply", rm)
 			}
 		case ipv4.ICMPTypeDestinationUnreachable:
+			fmt.Fprintf(os.Stderr, "\tDestination Net Prohibited\n")
 			if verbose {
-				log.Printf("\t%+v; Destination Net Prohibited", rm)
+				log.Printf("%+v;", rm)
 			}
 		default:
 			if verbose {
@@ -165,7 +162,7 @@ nn:
 		}
 	}
 	counter.String(heading(choose(peerHost, peer2)))
-	if counter.Loss > 0 && counter.Loss < 100 {
+	if counter.Sent > 0 && counter.Recvd > 0 && counter.Recvd <= counter.Sent {
 		fmt.Printf("%s\n", thirdparty.Format(accountant))
 	}
 	os.Exit(0)

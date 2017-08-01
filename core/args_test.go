@@ -70,6 +70,21 @@ func TestResolutionToLocalhost(t *testing.T) {
 	}
 }
 
+func TestParseZeroOptions(t *testing.T) {
+	fixture1 := []string{}
+	var fixture2 []string
+
+	if _, _, _, _, err := ParseOption(fixture1); err == nil {
+		t.Errorf("expected errUnknownHost ; got %v\n", err)
+	}
+	if _, _, _, _, err := ParseOption(fixture2); err == nil {
+		t.Errorf("expected errUnknownHost ; got %v\n", err)
+	}
+	if _, _, _, _, err := ParseOption(nil); err == nil {
+		t.Errorf("expected errUnknownHost ; got %v\n", err)
+	}
+}
+
 func TestReturnOnlyIPv4(t *testing.T) {
 	ipv4 := ParseAddr("localhost")
 	fmt.Printf("%v\n", ipv4)

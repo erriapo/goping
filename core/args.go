@@ -108,6 +108,7 @@ func NewEcho(payload string) icmp.Message {
 	return wm
 }
 
+// TODO this should be exported!
 var errUnknownHost = errors.New("Unknown host")
 
 // Arg holds the command line arguments.
@@ -120,6 +121,10 @@ type Arg struct {
 
 // ParseOption parses command line arguments
 func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
+	if options == nil || len(options) == 0 {
+		return false, false, 0, nil, errUnknownHost
+	}
+
 	bucket := new(Arg)
 
 	f := flag.NewFlagSet("goping", flag.ContinueOnError)
