@@ -1,6 +1,6 @@
 ## Dependencies
 
-`goping` only works on unixes & is only tested with golang 1.8.
+`goping` only works on unixes & is only tested with golang 1.6 & 1.8.
 
 * [golang.org/x/net/icmp](https://godoc.org/golang.org/x/net/icmp)
 * [golang.org/x/net/ipv4](https://godoc.org/golang.org/x/net/ipv4)
