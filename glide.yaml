@@ -8,3 +8,5 @@ import:
   - icmp
   - ipv4
 - package: github.com/erriapo/stats
+  vcs: git
+  version: v0.1.0

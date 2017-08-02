@@ -15,7 +15,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync/atomic"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -155,11 +155,14 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, nil
 }
 
+const step uint64 = 1
+
 // Counter keeps track of messages sent & received
 type Counter struct {
 	Sent  uint64
 	Recvd uint64
 	Loss  uint32
+	lock  sync.Mutex
 	tmpl  *template.Template
 }
 
@@ -174,31 +177,46 @@ func NewCounter() *Counter {
 
 // OnSent remembers how many ICMP Echo was sent.
 func (c *Counter) OnSent() {
-	atomic.AddUint64(&c.Sent, 1)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.Sent += step
 }
 
 // OnReception remembers how many ICMP Echo Reply was received.
 func (c *Counter) OnReception() {
-	atomic.AddUint64(&c.Recvd, 1)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.Recvd += step
 }
 
 // CalculateLoss side effect is to calculate the Loss percentage.
-func (c *Counter) CalculateLoss() {
-	r := atomic.LoadUint64(&c.Recvd)
-	s := atomic.LoadUint64(&c.Sent)
-	if r == 0 {
-		if s != 0 {
+func (c *Counter) calculateLoss() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	//r := atomic.LoadUint64(&c.Recvd)
+	//s := atomic.LoadUint64(&c.Sent)
+	if c.Recvd == 0 {
+		if c.Sent != 0 {
 			c.Loss = 100
 		}
 	} else {
-		if s != 0 {
-			c.Loss = uint32(((float32(s) - float32(r)) / float32(s)) * float32(100))
+		if c.Sent != 0 {
+			c.Loss = uint32(((float32(c.Sent) - float32(c.Recvd)) / float32(c.Sent)) * float32(100))
 		}
 	}
 }
 
+// String displays detailed packet loss percentages.
 func (c *Counter) String(header string) {
-	c.CalculateLoss()
+	c.calculateLoss()
 	fmt.Println(header)
+	// TODO make this mockable
 	_ = c.tmpl.Execute(os.Stdout, c)
+}
+
+// NeedStatistics informs the caller if more statistics can be printed.
+func (c *Counter) NeedStatistics() bool {
+	return c.Sent > 0 && c.Recvd > 0 && c.Recvd <= c.Sent
 }

@@ -72,7 +72,7 @@ func main() {
 	go func() {
 		<-exitchan
 		counter.String(heading(choose(peerHost, host)))
-		if counter.Sent > 0 && counter.Recvd > 0 && counter.Recvd <= counter.Sent {
+		if counter.NeedStatistics() {
 			fmt.Printf("%s\n", thirdparty.Format(accountant))
 		}
 		os.Exit(1)
@@ -162,7 +162,7 @@ nn:
 		}
 	}
 	counter.String(heading(choose(peerHost, peer2)))
-	if counter.Sent > 0 && counter.Recvd > 0 && counter.Recvd <= counter.Sent {
+	if counter.NeedStatistics() {
 		fmt.Printf("%s\n", thirdparty.Format(accountant))
 	}
 	os.Exit(0)
