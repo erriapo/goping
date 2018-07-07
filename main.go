@@ -78,7 +78,9 @@ func main() {
 		os.Exit(1)
 	}()
 
-	c, err := icmp.ListenPacket("ip4:icmp", net.IPv4zero.String())
+	//eth1 := net.IPv4(10, 5, 0, 2)
+	eth0 := net.IPv4(10,138,0,2)
+	c, err := icmp.ListenPacket("ip4:icmp", eth0.String())
 	if err != nil {
 		log.Fatal(err)
 	}
