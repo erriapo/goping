@@ -11,6 +11,7 @@ gavin@frodo:$  goping -d 8.8.8.8
 0 packets transmitted, 0 received, 0% packet loss
 
 
+
 gavin@frodo:$  goping -d www.google.ca
 .Reverse lookup took 169.446426ms
 
@@ -23,3 +24,42 @@ PING 216.58.193.67 (sea15s07-in-f3.1e100.net.) 56(64) bytes of data.
 
 --- sea15s07-in-f3.1e100.net. ping statistics ---
 5 packets transmitted, 0 received, 100% packet loss
+
+
+
+gavin@frodo:~/dev-2017/goping$ bin/goping -c 2 -d www.google.com
+.Reverse lookup took 10.117266246s
+
+PING 216.58.216.164 (sea15s02-in-f164.1e100.net.) 56(64) bytes of data.
+92 bytes from (172.16.1.1): icmp_req=1 time=1.805469ms
+    Destination Net Prohibited
+92 bytes from (172.16.1.1): icmp_req=2 time=1.813987ms
+    Destination Net Prohibited
+
+--- sea15s02-in-f164.1e100.net. ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss
+
+
+gavin@frodo:~/dev-2017/goping$ bin/goping -d github.com
+.Reverse lookup took 10.120806254s
+
+jjjjj 192.30.255.113 jjjj
+PING 192.30.255.113 (lb-192-30-255-113-sea.github.com.) 56(64) bytes of data.
+64 bytes from (192.30.255.113): icmp_req=1 time=96.985035ms
+Push 96.985035
+jjjjj <nil> jjjj
+0 bytes from (lb-192-30-255-113-sea.github.com.): icmp_req=2 No response
+jjjjj 192.30.255.113 jjjj
+64 bytes from (192.30.255.113): icmp_req=3 time=128.818707ms
+Push 128.818707
+jjjjj 192.30.255.113 jjjj
+64 bytes from (192.30.255.113): icmp_req=4 time=244.453161ms
+Push 244.453161
+jjjjj 127.0.0.1 jjjj
+64 bytes from (127.0.0.1): icmp_req=5 time=481.44µs
+    Destination Net Prohibited
+
+--- lb-192-30-255-113-sea.github.com. ping statistics ---
+5 packets transmitted, 3 received, 40% packet loss
+rtt min/avg/max/mdev = 96.985/156.752/244.453/77.601 ms
+

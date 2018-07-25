@@ -1,4 +1,4 @@
-// Copyright 2017 Gavin Bong. All rights reserved.
+// Copyright 2017 Gavin Chun Jin. All rights reserved.
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 package main
@@ -112,6 +112,7 @@ nn:
 
 		// TODO we need to loop until we receive an echo reply
 		n, peer, err := c.ReadFrom(rb)
+		fmt.Printf("jjjjj peer %v jjjj host %v\n", peer, host)
 		if peer != nil {
 			peer2 = peer
 		}
