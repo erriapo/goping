@@ -110,7 +110,10 @@ func NewEcho(payload string) icmp.Message {
 
 // ErrUnknownHost means we cannot parse
 // the IP address or the FQDN that was provided.
-var ErrUnknownHost = errors.New("Unknown host")
+var ErrUnknownHost = errors.New("Name or service not known")
+
+// ErrNoTarget means the target was not supplied
+var ErrNoTarget = errors.New("Missing target")
 
 // Arg holds the command line arguments.
 type Arg struct {
@@ -125,7 +128,6 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	if options == nil || len(options) == 0 {
 		return false, false, 0, nil, ErrUnknownHost
 	}
-
 	bucket := new(Arg)
 
 	f := flag.NewFlagSet("goping", flag.ContinueOnError)
@@ -133,7 +135,6 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	f.BoolVar(&bucket.Help, "h", false, "")
 	f.BoolVar(&bucket.Extra, "v", false, "")
 	f.Uint64Var(&bucket.Count, "c", 5, "")
-	f.StringVar(&bucket.Host, "d", bucket.Host, "")
 
 	if err := f.Parse(options); err != nil {
 		return false, false, 0, nil, err
@@ -141,6 +142,12 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 
 	if bucket.Help {
 		return bucket.Help, bucket.Extra, 0, nil, nil
+	}
+
+	if len(f.Args()) == 0 {
+		return false, false, 0, nil, ErrNoTarget
+	} else {
+		bucket.Host = f.Args()[0]
 	}
 
 	start := time.Now()

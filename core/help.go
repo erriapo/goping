@@ -6,17 +6,15 @@ package core
 
 // Usage is the help blurb
 var Usage = `
-Author:  Gavin (rubycoder@gmail.com)
-Github:  https://github.com/erriapo/goping
-Twitter: @GavinGastown3
-
 Usage:
-  goping -c 2 -d www.google.com
+  goping www.usenix.org
+  goping -c 2 8.8.4.4
 
 Options:
   -c count    Stop after sending count ECHO_REQUEST packets.
               (OPTIONAL: Defaults to 5.)
-  -d host     IPv4 FQDN or numeric address.
   -h          Show this message.
   -v          Increase verbosity.
+
+Author: @GavinGastown3
 `
