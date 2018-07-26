@@ -96,12 +96,12 @@ func ParseAddr(input string) *net.IPAddr {
 }
 
 // NewEcho constructs an ICMP packet.
-func NewEcho(payload string) icmp.Message {
+func NewEcho(payload string, seq int) icmp.Message {
 	wm := icmp.Message{
 		Type: ipv4.ICMPTypeEcho,
 		Code: 0,
 		Body: &icmp.Echo{
-			ID: os.Getpid() & 0xffff, Seq: 1,
+			ID: os.Getpid() & 0xffff, Seq: seq,
 			Data: []byte(payload),
 		},
 	}
@@ -154,7 +154,7 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	fmt.Fprintf(os.Stderr, ".")
 	ipAddr := ParseAddr(bucket.Host)
 	elapsed := time.Since(start)
-	fmt.Fprintf(os.Stderr, "Reverse lookup took %v\n\n", elapsed)
+	fmt.Fprintf(os.Stderr, "%v\n\n", elapsed)
 
 	if ipAddr == nil {
 		return false, bucket.Extra, 0, nil, ErrUnknownHost

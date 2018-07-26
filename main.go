@@ -17,8 +17,12 @@ import (
 	"time"
 )
 
-// A quote by Arthur Schopenhauer
-const payload = "A high degree of intellect tends to make a man unsocial."
+// A quote by Epictetus
+const payload = "First learn the meaning of what you say, and then speak."
+const payloadLen = len(payload)
+const ipheader = 20
+const icmpheader = 8
+const payloadAndHeader = payloadLen + ipheader + icmpheader
 
 // milliseconds to pause between sending each ICMP request
 const pause = 1
@@ -84,17 +88,21 @@ func main() {
 	}
 	defer c.Close()
 
-	wm := core.NewEcho(payload)
-	wb, err := wm.Marshal(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var wm icmp.Message
+	var wb []byte
+
 	rb := make([]byte, 1500)
+	//rb2 := make([]byte, 1500)
 
 	var t1 time.Time
 	var peer2 net.Addr
 nn:
 	for i := 1; i <= int(count); i++ {
+		wm = core.NewEcho(payload, i)
+		wb, err = wm.Marshal(nil)
+		if err != nil {
+			log.Fatal(err)
+		}
 		//t1, _ := time.Parse(time.RFC3339, "2017-06-28T19:55:50+00:00")
 		t1 = time.Now().Add(time.Second * 6)
 		if err := c.SetDeadline(t1); err != nil {
@@ -111,19 +119,23 @@ nn:
 		counter.OnSent()
 
 		// TODO we need to loop until we receive an echo reply
+		//hh := c.IPv4PacketConn()
+		//k, cm, _, errgg := hh.ReadFrom(rb2)
+		//fmt.Printf("!!! %v --- %v %v\n", cm, errgg, k)
+
 		n, peer, err := c.ReadFrom(rb)
-		fmt.Printf("jjjjj peer %v jjjj host %v\n", peer, host)
+		//fmt.Printf("jjjjj peer %v jjjj host %v\n", peer, host)
 		if peer != nil {
 			peer2 = peer
 		}
 
 		if !pingHeading {
-			fmt.Printf("PING %v (%v) 56(64) bytes of data.\n", host, choose(peerHost, peer))
+			fmt.Printf("PING %v (%v) %v(%v) bytes of data.\n", choose(peerHost, peer), host, payloadLen, payloadAndHeader)
 			pingHeading = true
 		}
 
 		if err != nil {
-			fmt.Printf("%v bytes from (%v): icmp_req=%v No response\n", 0, choose(peerHost, host), i)
+			fmt.Printf("%v bytes from YYY (%v): icmp_req=%v No response\n", 0, choose(peerHost, host), i)
 			if verbose {
 				fmt.Fprintf(os.Stderr, "\t%+v\n", err)
 			}
@@ -131,12 +143,14 @@ nn:
 		}
 		elapsed := time.Since(start)
 
-		fmt.Printf("%v bytes from (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
+		fmt.Printf("%v bytes from YYY (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
 		if verbose {
 			fmt.Printf("RTT %d ns\n", elapsed.Nanoseconds())
 		}
 
 		rm, err := icmp.ParseMessage(1, rb[:n])
+		//hder, _ := icmp.ParseIPv4Header(rb[:n])
+		//fmt.Printf("REPLY %v -> %v\n", rm, hder)
 		if err != nil {
 			log.Fatal(err)
 		}
