@@ -32,6 +32,7 @@ var cache = core.NewCache()
 var counter = core.NewCounter()
 var pingHeading bool
 
+// return the first non empty arg or "unknown"
 func choose(option1 string, option2 net.Addr) string {
 	if len(option1) != 0 {
 		return option1
@@ -51,7 +52,7 @@ func nanoToMilli(d time.Duration) float64 {
 }
 
 func main() {
-	help, verbose, count, host, err := core.ParseOption(os.Args[1:])
+	help, verbose, count, host, cname, err := core.ParseOption(os.Args[1:])
 	if help {
 		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
@@ -68,6 +69,7 @@ func main() {
 	peerHost, _ := cache.Reverse(host)
 	if verbose {
 		fmt.Printf("Reversed lookup of supplied host = %v\n", peerHost)
+		fmt.Printf("CNAME = %v\n", cname)
 	}
 
 	// trap CTRL+C
@@ -75,7 +77,7 @@ func main() {
 	signal.Notify(exitchan, os.Interrupt) // SIGINT
 	go func() {
 		<-exitchan
-		counter.String(heading(choose(peerHost, host)))
+		counter.String(heading(choose(cname, host)))
 		if counter.NeedStatistics() {
 			fmt.Printf("%s\n", thirdparty.Format(accountant))
 		}
@@ -92,7 +94,6 @@ func main() {
 	var wb []byte
 
 	rb := make([]byte, 1500)
-	//rb2 := make([]byte, 1500)
 
 	var t1 time.Time
 	var peer2 net.Addr
@@ -111,7 +112,6 @@ nn:
 		}
 		time.Sleep(pause * time.Second)
 		start := time.Now()
-		//if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP("8.8.8.8")}); err != nil {
 		if _, err := c.WriteTo(wb, host); err != nil {
 			fmt.Fprintf(os.Stderr, "%d connect: Network is unreachable\n", i)
 			continue nn
@@ -124,18 +124,20 @@ nn:
 		//fmt.Printf("!!! %v --- %v %v\n", cm, errgg, k)
 
 		n, peer, err := c.ReadFrom(rb)
-		//fmt.Printf("jjjjj peer %v jjjj host %v\n", peer, host)
+		if verbose {
+			fmt.Printf("peer %v vs host %v\n", peer, host)
+		}
 		if peer != nil {
 			peer2 = peer
 		}
 
 		if !pingHeading {
-			fmt.Printf("PING %v (%v) %v(%v) bytes of data.\n", choose(peerHost, peer), host, payloadLen, payloadAndHeader)
+			fmt.Printf("PING %v (%v) %v(%v) bytes of data.\n", choose(cname, peer), host, payloadLen, payloadAndHeader)
 			pingHeading = true
 		}
 
 		if err != nil {
-			fmt.Printf("%v bytes from YYY (%v): icmp_req=%v No response\n", 0, choose(peerHost, host), i)
+			fmt.Printf("%v bytes from %v (%v): icmp_seq=%v No response\n", 0, choose(peerHost, host), host, i)
 			if verbose {
 				fmt.Fprintf(os.Stderr, "\t%+v\n", err)
 			}
@@ -143,7 +145,7 @@ nn:
 		}
 		elapsed := time.Since(start)
 
-		fmt.Printf("%v bytes from YYY (%v): icmp_req=%v time=%v\n", n, peer, i, elapsed)
+		fmt.Printf("%v bytes from %v (%v): icmp_seq=%v time=%v\n", n, choose(peerHost, host), host.IP, i, elapsed)
 		if verbose {
 			fmt.Printf("RTT %d ns\n", elapsed.Nanoseconds())
 		}
@@ -176,7 +178,7 @@ nn:
 			}
 		}
 	}
-	counter.String(heading(choose(peerHost, peer2)))
+	counter.String(heading(choose(cname, peer2)))
 	if counter.NeedStatistics() {
 		fmt.Printf("%s\n", thirdparty.Format(accountant))
 	}

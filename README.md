@@ -5,30 +5,21 @@
 * [golang.org/x/net/icmp](https://godoc.org/golang.org/x/net/icmp)
 * [golang.org/x/net/ipv4](https://godoc.org/golang.org/x/net/ipv4)
 * [github.com/erriapo/stats](https://github.com/erriapo/stats)
+* [golang.org/x/net/idna](https://godoc.org/golang.org/x/net/idna)
 
 ## Usage example
 
-You must supply the target host with a -d option.
-
 ```bash
-$ bin/goping -d localhost
-.Reverse lookup took 139.777418ms
-
-PING 127.0.0.1 (localhost) 56(64) bytes of data.
-64 bytes from (127.0.0.1): icmp_req=1 time=594.843µs
-64 bytes from (127.0.0.1): icmp_req=2 time=278.673µs
-64 bytes from (127.0.0.1): icmp_req=3 time=280.854µs
-64 bytes from (127.0.0.1): icmp_req=4 time=317.852µs
-64 bytes from (127.0.0.1): icmp_req=5 time=313.576µs
-64 bytes from (127.0.0.1): icmp_req=6 time=379.35µs
-64 bytes from (127.0.0.1): icmp_req=7 time=388.265µs
-64 bytes from (127.0.0.1): icmp_req=8 time=317.853µs
-64 bytes from (127.0.0.1): icmp_req=9 time=387.401µs
-64 bytes from (127.0.0.1): icmp_req=10 time=532.417µs
-
---- localhost ping statistics ---
-10 packets transmitted, 5 received, 50% packet loss
-rtt min/avg/max/mdev = 0.279/0.365/0.532/0.1 ms
+$ goping -c 4 xn--bdk.ws
+.                                                                                              
+PING ツ.ws. (132.148.137.119) 56(84) bytes of data.                                            
+64 bytes from ip-132-148-137-119.ip.secureserver.net. (132.148.137.119): icmp_seq=1 time=33.892283ms
+64 bytes from ip-132-148-137-119.ip.secureserver.net. (132.148.137.119): icmp_seq=2 time=33.402274ms
+64 bytes from ip-132-148-137-119.ip.secureserver.net. (132.148.137.119): icmp_seq=3 time=33.361368ms
+64 bytes from ip-132-148-137-119.ip.secureserver.net. (132.148.137.119): icmp_seq=4 time=33.486581ms                                                                                          
+--- ツ.ws. ping statistics ---                                                                 
+4 packets transmitted, 4 received, 0% packet loss                                              
+rtt min/avg/max/mdev = 33.361/33.536/33.892/0.243 ms              
 ```
 
 Additionally, the `goping` binary needs the CAP_NET_RAWIO capability. 

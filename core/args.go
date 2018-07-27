@@ -10,14 +10,16 @@ import (
 	"flag"
 	"fmt"
 	"golang.org/x/net/icmp"
+	"golang.org/x/net/idna"
 	"golang.org/x/net/ipv4"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"text/template"
-	"time"
+	//"time"
 )
 
 var lookupIPfunc = net.LookupIP
@@ -124,9 +126,9 @@ type Arg struct {
 }
 
 // ParseOption parses command line arguments
-func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
+func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, error) {
 	if options == nil || len(options) == 0 {
-		return false, false, 0, nil, ErrUnknownHost
+		return false, false, 0, nil, "", ErrUnknownHost
 	}
 	bucket := new(Arg)
 
@@ -137,29 +139,29 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, error) {
 	f.Uint64Var(&bucket.Count, "c", 5, "")
 
 	if err := f.Parse(options); err != nil {
-		return false, false, 0, nil, err
+		return false, false, 0, nil, "", err
 	}
 
 	if bucket.Help {
-		return bucket.Help, bucket.Extra, 0, nil, nil
+		return bucket.Help, bucket.Extra, 0, nil, "", nil
 	}
 
 	if len(f.Args()) == 0 {
-		return false, false, 0, nil, ErrNoTarget
+		return false, false, 0, nil, "", ErrNoTarget
 	} else {
 		bucket.Host = f.Args()[0]
 	}
 
-	start := time.Now()
-	fmt.Fprintf(os.Stderr, ".")
+	//start := time.Now()
+	fmt.Fprintf(os.Stderr, ".\n")
 	ipAddr := ParseAddr(bucket.Host)
-	elapsed := time.Since(start)
-	fmt.Fprintf(os.Stderr, "%v\n\n", elapsed)
+	//elapsed := time.Since(start)
+	//fmt.Fprintf(os.Stderr, "%v\n\n", elapsed)
 
 	if ipAddr == nil {
-		return false, bucket.Extra, 0, nil, ErrUnknownHost
+		return false, bucket.Extra, 0, nil, "", ErrUnknownHost
 	}
-	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, nil
+	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, TryConvertPunycode(GetCNAME(bucket.Host)), nil
 }
 
 const step uint64 = 1
@@ -226,4 +228,30 @@ func (c *Counter) String(header string) {
 // NeedStatistics informs the caller if more statistics can be printed.
 func (c *Counter) NeedStatistics() bool {
 	return c.Sent > 0 && c.Recvd > 0 && c.Recvd <= c.Sent
+}
+
+func GetCNAME(h string) string {
+	//We want the final CNAME
+	cname, e := net.LookupCNAME(h)
+	if e != nil {
+		return ""
+	}
+	return cname
+}
+
+func TryConvertPunycode(domain string) string {
+	if len(domain) == 0 {
+		return domain
+	}
+	p := idna.New()
+	if strings.HasPrefix(domain, "xn--") {
+		if result, err := p.ToUnicode(domain); err != nil {
+			return domain
+		} else {
+			return result
+		}
+
+	} else {
+		return domain
+	}
 }
