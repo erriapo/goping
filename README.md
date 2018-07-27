@@ -1,6 +1,6 @@
 ## Dependencies
 
-`goping` only works on unixes & is only tested with golang 1.6 & 1.8.
+`goping`only works on unixes & is only tested with golang 1.8 and 1.10
 
 * [golang.org/x/net/icmp](https://godoc.org/golang.org/x/net/icmp)
 * [golang.org/x/net/ipv4](https://godoc.org/golang.org/x/net/ipv4)
@@ -10,6 +10,18 @@
 ## Usage example
 
 ```bash
+$ goping -c 2 8.8.4.4
+.
+PING 8.8.4.4 (8.8.4.4) 56(84) bytes of data.
+64 bytes from google-public-dns-b.google.com. (8.8.4.4): icmp_seq=1 time=838.022µs
+64 bytes from google-public-dns-b.google.com. (8.8.4.4): icmp_seq=2 time=978.804µs
+
+--- 8.8.4.4 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss
+rtt min/avg/max/mdev = 0.838/0.908/0.979/0.1 ms
+
+
+
 $ goping -c 4 xn--bdk.ws
 .                                                                                              
 PING ツ.ws. (132.148.137.119) 56(84) bytes of data.                                            

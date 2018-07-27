@@ -168,7 +168,7 @@ nn:
 				log.Printf("\t%+v; echo reply", rm)
 			}
 		case ipv4.ICMPTypeDestinationUnreachable:
-			fmt.Fprintf(os.Stderr, "\tDestination Net Prohibited\n")
+			fmt.Fprintf(os.Stderr, "\tDestination unreachable.\n")
 			if verbose {
 				log.Printf("%+v;", rm)
 			}
