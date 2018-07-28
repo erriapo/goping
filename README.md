@@ -7,6 +7,12 @@
 * [github.com/erriapo/stats](https://github.com/erriapo/stats)
 * [golang.org/x/net/idna](https://godoc.org/golang.org/x/net/idna)
 
+## Quick install
+
+```bash
+$ go get -x gopkg.in/erriapo/goping.v1
+```
+
 ## Usage example
 
 ```bash
