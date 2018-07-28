@@ -26,4 +26,4 @@ ${GOBIN}/goping: fmt test
 
 setcapabilities: ${GOBIN}/goping
 	@echo ... using GOBIN $$GOBIN
-	sudo /sbin/setcap cap_net_raw=ep ${GOBIN}/goping
+	sudo /sbin/setcap cap_net_raw+ep ${GOBIN}/goping
