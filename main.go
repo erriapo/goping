@@ -52,7 +52,7 @@ func nanoToMilli(d time.Duration) float64 {
 }
 
 func main() {
-	help, verbose, count, host, cname, err := core.ParseOption(os.Args[1:])
+	help, verbose, count, host, cname, iface, err := core.ParseOption(os.Args[1:])
 	if help {
 		fmt.Fprintf(os.Stderr, "%s", core.Usage)
 		os.Exit(2)
@@ -84,7 +84,21 @@ func main() {
 		os.Exit(1)
 	}()
 
-	c, err := icmp.ListenPacket("ip4:icmp", net.IPv4zero.String())
+	var ifacetarget = net.IPv4zero
+	allinterfaces, ifaceerr := core.ScanInterfaces()
+	if ifaceerr == nil {
+		if verbose {
+			fmt.Printf("Scanning interfaces: %v\n", allinterfaces)
+		}
+		if iface != "0.0.0.0" {
+			ip, ok := allinterfaces[iface]
+			if ok {
+				ifacetarget = ip
+			}
+		}
+	}
+
+	c, err := icmp.ListenPacket("ip4:icmp", ifacetarget.String())
 	if err != nil {
 		log.Fatal(err)
 	}

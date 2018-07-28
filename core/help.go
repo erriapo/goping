@@ -11,9 +11,9 @@ Usage:
   goping -c 2 8.8.4.4
 
 Options:
-  -c count    Stop after sending count ECHO_REQUEST packets.
-              (OPTIONAL: Defaults to 5.)
+  -c count    Stop after sending count ECHO_REQUEST packets. (OPTIONAL: Defaults to 5.)
   -h          Show this message.
+  -I iface    Interface iface is an interface name. E.g. eth0, docker0 (OPTIONAL)
   -v          Increase verbosity.
 
 Author: @GavinGastown3

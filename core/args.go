@@ -119,16 +119,19 @@ var ErrNoTarget = errors.New("Missing target")
 
 // Arg holds the command line arguments.
 type Arg struct {
-	Help  bool
-	Host  string
-	Extra bool
-	Count uint64
+	Host      string
+	Interface string
+	Help      bool
+	Extra     bool
+	Count     uint64
 }
 
+const defaultInterface = "0.0.0.0"
+
 // ParseOption parses command line arguments
-func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, error) {
-	if options == nil || len(options) == 0 {
-		return false, false, 0, nil, "", ErrUnknownHost
+func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, string, error) {
+	if len(options) == 0 {
+		return false, false, 0, nil, "", defaultInterface, ErrUnknownHost
 	}
 	bucket := new(Arg)
 
@@ -136,18 +139,23 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, err
 	f.SetOutput(ioutil.Discard)
 	f.BoolVar(&bucket.Help, "h", false, "")
 	f.BoolVar(&bucket.Extra, "v", false, "")
+	f.StringVar(&bucket.Interface, "I", "0.0.0.0", "")
 	f.Uint64Var(&bucket.Count, "c", 5, "")
 
 	if err := f.Parse(options); err != nil {
-		return false, false, 0, nil, "", err
+		return false, false, 0, nil, "", defaultInterface, err
+	}
+
+	if bucket.Extra {
+		fmt.Printf("Interface selected: %v\n", bucket.Interface)
 	}
 
 	if bucket.Help {
-		return bucket.Help, bucket.Extra, 0, nil, "", nil
+		return bucket.Help, bucket.Extra, 0, nil, "", defaultInterface, nil
 	}
 
 	if len(f.Args()) == 0 {
-		return false, false, 0, nil, "", ErrNoTarget
+		return false, false, 0, nil, "", defaultInterface, ErrNoTarget
 	} else {
 		bucket.Host = f.Args()[0]
 	}
@@ -159,9 +167,9 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, err
 	//fmt.Fprintf(os.Stderr, "%v\n\n", elapsed)
 
 	if ipAddr == nil {
-		return false, bucket.Extra, 0, nil, "", ErrUnknownHost
+		return false, bucket.Extra, 0, nil, "", bucket.Interface, ErrUnknownHost
 	}
-	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, TryConvertPunycode(GetCNAME(bucket.Host)), nil
+	return bucket.Help, bucket.Extra, bucket.Count, ipAddr, TryConvertPunycode(GetCNAME(bucket.Host)), bucket.Interface, nil
 }
 
 const step uint64 = 1
@@ -230,6 +238,7 @@ func (c *Counter) NeedStatistics() bool {
 	return c.Sent > 0 && c.Recvd > 0 && c.Recvd <= c.Sent
 }
 
+// GetCNAME returns an empty string or the actual CNAME
 func GetCNAME(h string) string {
 	//We want the final CNAME
 	cname, e := net.LookupCNAME(h)
@@ -239,6 +248,7 @@ func GetCNAME(h string) string {
 	return cname
 }
 
+// TryConvertPunycode attempts to convert the domain if it is punycode encoded
 func TryConvertPunycode(domain string) string {
 	if len(domain) == 0 {
 		return domain
