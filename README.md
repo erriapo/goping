@@ -33,7 +33,7 @@ PING ツ.ws. (132.148.137.119) 56(84) bytes of data.
 rtt min/avg/max/mdev = 33.361/33.536/33.892/0.243 ms
 
 
-$ DEBUG=netdns=cgo+2 goping -I eth1 -c 3 1.1
+$ GODEBUG=netdns=cgo+2 goping -I eth1 -c 3 1.1
 .
 go package net: using cgo DNS resolver
 go package net: hostLookupOrder(1.1) = cgo
