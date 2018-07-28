@@ -21,7 +21,6 @@ PING 8.8.4.4 (8.8.4.4) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.838/0.908/0.979/0.1 ms
 
 
-
 $ goping -c 4 xn--bdk.ws
 .                                                                                              
 PING ツ.ws. (132.148.137.119) 56(84) bytes of data.                                            
@@ -34,9 +33,12 @@ PING ツ.ws. (132.148.137.119) 56(84) bytes of data.
 rtt min/avg/max/mdev = 33.361/33.536/33.892/0.243 ms
 
 
-$ DEBUG=netdns=cgo+1 goping -I eth1 -c 3 1.1
+$ DEBUG=netdns=cgo+2 goping -I eth1 -c 3 1.1
 .
 go package net: using cgo DNS resolver
+go package net: hostLookupOrder(1.1) = cgo
+go package net: hostLookupOrder() = cgo
+go package net: hostLookupOrder() = cgo
 PING 1.1. (1.0.0.1) 56(84) bytes of data.
 64 bytes from 1dot1dot1dot1.cloudflare-dns.com. (1.0.0.1): icmp_seq=1 time=7.85096ms
 64 bytes from 1dot1dot1dot1.cloudflare-dns.com. (1.0.0.1): icmp_seq=2 time=7.240956ms
