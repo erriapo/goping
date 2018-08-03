@@ -186,6 +186,11 @@ nn:
 			if verbose {
 				log.Printf("%+v;", rm)
 			}
+		case ipv4.ICMPTypeTimeExceeded:
+			fmt.Fprintf(os.Stderr, "\tTime to live exceeded.\n")
+			if verbose {
+				log.Printf("%+v;", rm)
+			}
 		default:
 			if verbose {
 				log.Printf("\tunexpected %+v;", rm)
