@@ -117,6 +117,9 @@ var ErrUnknownHost = errors.New("Name or service not known")
 // ErrNoTarget means the target was not supplied
 var ErrNoTarget = errors.New("Missing target")
 
+// ErrBadCount signifies that count packets must be greater than or equal to 1.
+var ErrBadCount = errors.New("bad number of packets to transmit")
+
 // Arg holds the command line arguments.
 type Arg struct {
 	Host      string
@@ -158,6 +161,10 @@ func ParseOption(options []string) (bool, bool, uint64, *net.IPAddr, string, str
 		return false, false, 0, nil, "", defaultInterface, ErrNoTarget
 	} else {
 		bucket.Host = f.Args()[0]
+	}
+
+	if bucket.Count == 0 {
+		return false, false, 0, nil, "", defaultInterface, ErrBadCount
 	}
 
 	//start := time.Now()
