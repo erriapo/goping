@@ -60,7 +60,6 @@ Or if you prefer, you can execute it set-uid root.
 
 ## TODOs
 
-* Fix bug [#2](../../issues/2)
 * Better test code coverage.
 * Support IPV6 addresses.
 * Parse the ICMP Echo reply & add the reply TTLs.

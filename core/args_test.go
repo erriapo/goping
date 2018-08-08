@@ -102,6 +102,25 @@ func TestReturnDNSError(t *testing.T) {
 	}
 }
 
+var idnaFixtures = []struct {
+	punycode string
+	expected string
+}{
+	{"xn--pdc.ca", "ઊ.ca"},
+	{"xn--m5c.ws", "๛.ws"},
+	{"xn--bdk.ws", "ツ.ws"},
+	{"www.google.ca", "www.google.ca"},
+}
+
+func TestPunycodeConversion(t *testing.T) {
+	for _, tt := range idnaFixtures {
+		reality := TryConvertPunycode(tt.punycode)
+		if reality != tt.expected {
+			t.Errorf("TryConvertPunycode(%v): expected %s, actual %s", tt.punycode, tt.expected, reality)
+		}
+	}
+}
+
 func BenchmarkParseLocalhostFqdn(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
