@@ -182,11 +182,13 @@ nn:
 				log.Printf("\t%+v; echo reply", rm)
 			}
 		case ipv4.ICMPTypeDestinationUnreachable:
+			counter.NoteAnError()
 			fmt.Fprintf(os.Stderr, "\tDestination unreachable.\n")
 			if verbose {
 				log.Printf("%+v;", rm)
 			}
 		case ipv4.ICMPTypeTimeExceeded:
+			counter.NoteAnError()
 			fmt.Fprintf(os.Stderr, "\tTime to live exceeded.\n")
 			if verbose {
 				log.Printf("%+v;", rm)

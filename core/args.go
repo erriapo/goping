@@ -183,16 +183,18 @@ const step uint64 = 1
 
 // Counter keeps track of messages sent & received
 type Counter struct {
-	Sent  uint64
-	Recvd uint64
-	Loss  uint32
-	lock  sync.Mutex
-	tmpl  *template.Template
+	Sent   uint64
+	Recvd  uint64
+	Loss   uint32
+	Err    bool
+	Errors uint64
+	lock   sync.Mutex
+	tmpl   *template.Template
 }
 
 // NewCounter constructs a new Counter
 func NewCounter() *Counter {
-	t, err := template.New("stat1").Parse("{{.Sent}} packets transmitted, {{.Recvd}} received, {{.Loss}}% packet loss\n")
+	t, err := template.New("stat1").Parse("{{.Sent}} packets transmitted, {{.Recvd}} received,{{if .Err}} +{{.Errors}} errors,{{end}} {{.Loss}}% packet loss\n")
 	if err != nil {
 		panic(err)
 	}
@@ -215,6 +217,22 @@ func (c *Counter) OnReception() {
 	c.Recvd += step
 }
 
+func (c *Counter) NoteAnError() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.Errors += 1
+}
+
+func (c *Counter) gotError() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if c.Errors > 0 {
+		c.Err = true
+	}
+}
+
 // CalculateLoss side effect is to calculate the Loss percentage.
 func (c *Counter) calculateLoss() {
 	c.lock.Lock()
@@ -235,6 +253,7 @@ func (c *Counter) calculateLoss() {
 // String displays detailed packet loss percentages.
 func (c *Counter) String(header string) {
 	c.calculateLoss()
+	c.gotError()
 	fmt.Println(header)
 	// TODO make this mockable
 	_ = c.tmpl.Execute(os.Stdout, c)
