@@ -77,7 +77,7 @@ func main() {
 	signal.Notify(exitchan, os.Interrupt) // SIGINT
 	go func() {
 		<-exitchan
-		counter.String(heading(choose(cname, host)))
+		counter.Render(os.Stdout, heading(choose(cname, host)))
 		if counter.NeedStatistics() {
 			fmt.Printf("%s\n", thirdparty.Format(accountant))
 		}
@@ -199,7 +199,7 @@ nn:
 			}
 		}
 	}
-	counter.String(heading(choose(cname, peer2)))
+	counter.Render(os.Stdout, heading(choose(cname, peer2)))
 	if counter.NeedStatistics() {
 		fmt.Printf("%s\n", thirdparty.Format(accountant))
 	}

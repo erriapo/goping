@@ -2,7 +2,7 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file.
 
-.PHONY: all setcapabilities benchmark clean fmt test
+.PHONY: all setcapabilities benchmark clean fmt test gometa
 
 all: setcapabilities
 
@@ -17,6 +17,9 @@ fmt:
 	go fmt .
 	go fmt ./core
 	go fmt ./thirdparty
+
+gometa:
+	bin/gometalinter.v2 --disable-all --enable=errcheck --enable=vet --enable=vetshadow ./...
 
 benchmark:
 	go test ./core -bench .

@@ -16,6 +16,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"io"
 	"strings"
 	"sync"
 	"text/template"
@@ -250,13 +251,13 @@ func (c *Counter) calculateLoss() {
 	}
 }
 
-// String displays detailed packet loss percentages.
-func (c *Counter) String(header string) {
+// Render calculates detailed packet loss percentages
+// and writes them to the supplied Writer.
+func (c *Counter) Render(w io.Writer, header string) {
 	c.calculateLoss()
 	c.gotError()
-	fmt.Println(header)
-	// TODO make this mockable
-	_ = c.tmpl.Execute(os.Stdout, c)
+	fmt.Fprintln(w, header)
+	_ = c.tmpl.Execute(w, c)
 }
 
 // NeedStatistics informs the caller if more statistics can be printed.
