@@ -7,6 +7,7 @@
 all: setcapabilities
 
 clean:
+	test -n "$(GOBIN)"  # $$GOBIN
 	@echo ... using GOBIN $$GOBIN
 	rm ${GOBIN}/goping
 
@@ -19,7 +20,8 @@ fmt:
 	go fmt ./thirdparty
 
 gometa:
-	bin/gometalinter.v2 --disable-all --enable=errcheck --enable=vet --enable=vetshadow ./...
+	test -n "$(GOBIN)"  # $$GOBIN
+	${GOBIN}/gometalinter --disable-all --enable=errcheck --enable=vet --enable=vetshadow ./...
 
 benchmark:
 	go test ./core -bench .
