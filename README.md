@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/erriapo/goping?status.png)](https://godoc.org/github.com/erriapo/goping)
+
 ## Dependencies
 
 `goping`only works on unixes & is only tested with golang 1.8 and 1.10
