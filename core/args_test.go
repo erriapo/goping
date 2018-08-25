@@ -103,39 +103,39 @@ func TestReturnDNSError(t *testing.T) {
 	}
 }
 
-// @TODO Convert to table driven test
-const expected0 = "CAFEBABE\n0 packets transmitted, 0 received, 0% packet loss\n"
-const expected1 = "CAFEBABE\n1 packets transmitted, 0 received, 100% packet loss\n"
-const expected2 = "CAFEBABE\n2 packets transmitted, 1 received, +1 errors, 50% packet loss\n"
+var counterFixtures = []struct {
+	header      string
+	changesFunc func(*Counter)
+	expected    string
+}{
+	{"CAFEBABE",
+		func(c *Counter) {},
+		"CAFEBABE\n0 packets transmitted, 0 received, 0% packet loss\n"},
+	{"CAFEBABE",
+		func(c *Counter) {
+			c.OnSent()
+		},
+		"CAFEBABE\n1 packets transmitted, 0 received, 100% packet loss\n"},
+	{"CAFEBABE",
+		func(c *Counter) {
+			c.OnSent()
+			c.OnSent()
+			c.OnReception()
+			c.NoteAnError()
+		},
+		"CAFEBABE\n2 packets transmitted, 1 received, +1 errors, 50% packet loss\n"},
+}
 
 func TestCounter(t *testing.T) {
-	var b bytes.Buffer
-	counter := NewCounter()
-
-	// t0: no errors, nothing sent out
-	counter.Render(&b, "CAFEBABE")
-	if b.String() != expected0 {
-		t.Errorf("expected <%v> ; got <%v>\n", expected0, b.String())
+	for _, tt := range counterFixtures {
+		var b bytes.Buffer
+		counter := NewCounter()
+		tt.changesFunc(counter)
+		counter.Render(&b, tt.header)
+		if b.String() != tt.expected {
+			t.Errorf("expected <%v> ; got <%v>\n", tt.expected, b.String())
+		}
 	}
-	b.Reset()
-
-	// t1: 1 sent, 0 errors
-	counter.OnSent()
-	counter.Render(&b, "CAFEBABE")
-	if b.String() != expected1 {
-		t.Errorf("expected <%v> ; got <%v>\n", expected1, b.String())
-	}
-	b.Reset()
-
-	// t2: 2 sent, 1 received, 1 errors
-	counter.OnSent()
-	counter.OnReception()
-	counter.NoteAnError()
-	counter.Render(&b, "CAFEBABE")
-	if b.String() != expected2 {
-		t.Errorf("expected <%v> ; got <%v>\n", expected2, b.String())
-	}
-	b.Reset()
 }
 
 var idnaFixtures = []struct {
