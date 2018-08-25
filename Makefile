@@ -12,7 +12,7 @@ clean:
 	rm ${GOBIN}/goping
 
 test:
-	go test -cpu=1,2 ./core
+	GOCACHE=off go test -cpu=1,2 ./core
 
 fmt:
 	go fmt .
