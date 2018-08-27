@@ -9,6 +9,10 @@
 * [github.com/erriapo/stats](https://github.com/erriapo/stats)
 * [golang.org/x/net/idna](https://godoc.org/golang.org/x/net/idna)
 
+## Screencast
+
+[![Click to watch](media/asciinema.png)](http://bit.ly/2mNGOY1)
+
 ## Quick install
 
 ```bash
