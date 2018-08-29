@@ -32,31 +32,6 @@ var cache = core.NewCache()
 var counter = core.NewCounter()
 var pingHeading bool
 
-type Peer struct {
-	FQDN string
-	IP   string
-}
-
-func choosePeer(hostFQDN string, host *net.IPAddr, hostErr error, peerFQDN string, peer net.Addr, peerErr error) Peer {
-	if peer != nil {
-		if peerErr != nil {
-			return Peer{FQDN: peer.String(), IP: peer.String()}
-		} else {
-			return Peer{FQDN: peerFQDN, IP: peer.String()}
-		}
-	}
-
-	if host != nil {
-		if hostErr != nil {
-			return Peer{FQDN: host.String(), IP: host.String()}
-		} else {
-			return Peer{FQDN: hostFQDN, IP: host.IP.String()}
-		}
-	}
-
-	return Peer{FQDN: "Unknown", IP: "?.?.?.?"}
-}
-
 // return the first non empty arg or "unknown"
 func choose(option1 string, option2 net.Addr) string {
 	if len(option1) != 0 {
@@ -139,7 +114,7 @@ func main() {
 	var peer2FQDN string
 	var peer2err error
 
-	//g := choosePeer("", nil, nil, "", nil, nil)
+	//g := core.ChoosePeer("", nil, nil, "", nil, nil)
 	//fmt.Printf("g: %v %T\n", g, g)
 
 nn:
@@ -191,9 +166,9 @@ nn:
 		elapsed := time.Since(start)
 
 		peer2FQDN, peer2err = cache.Reverse(peer2)
-		h := choosePeer(suppliedFQDN, host, suppliedErr, peer2FQDN, peer2, peer2err)
+		h := core.ChoosePeer(suppliedFQDN, host, suppliedErr, peer2FQDN, peer2, peer2err)
 		if verbose {
-			fmt.Printf("choosePeer() returned %v\n", h)
+			fmt.Printf("ChoosePeer() returned %v\n", h)
 		}
 		fmt.Printf("%v bytes from %v (%v): icmp_seq=%v time=%v\n", n, h.FQDN, h.IP, i, elapsed)
 		if verbose {

@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestMain(m *testing.M) {
@@ -122,8 +123,9 @@ var counterFixtures = []struct {
 			c.OnSent()
 			c.OnReception()
 			c.NoteAnError()
+			c.NoteAnError()
 		},
-		"CAFEBABE\n2 packets transmitted, 1 received, +1 errors, 50% packet loss\n"},
+		"CAFEBABE\n2 packets transmitted, 1 received, +2 errors, 50% packet loss\n"},
 }
 
 func TestCounter(t *testing.T) {
@@ -154,6 +156,15 @@ func TestPunycodeConversion(t *testing.T) {
 		if reality != tt.expected {
 			t.Errorf("TryConvertPunycode(%v): expected %s, actual %s", tt.punycode, tt.expected, reality)
 		}
+	}
+}
+
+func TestChoosePeer(t *testing.T) {
+        // ChoosePeer(hostFQDN string, host *net.IPAddr, hostErr error, peerFQDN string, peer net.Addr, peerErr error)
+	expected0 := Peer{FQDN: "Unknown", IP: "?.?.?.?"}
+	peer0 := ChoosePeer("", nil, nil, "", nil, nil)
+	if ! cmp.Equal(peer0, expected0) {
+			t.Errorf("ChoosePeer: expected %v, actual %v", expected0, peer0)
 	}
 }
 

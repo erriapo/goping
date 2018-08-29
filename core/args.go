@@ -292,3 +292,30 @@ func TryConvertPunycode(domain string) string {
 		return domain
 	}
 }
+
+// Peer encapsulates a displayable DNS name.
+type Peer struct {
+	FQDN string
+	IP   string
+}
+
+// ChoosePeer decides between the supplied target host or the responding peer.
+func ChoosePeer(hostFQDN string, host *net.IPAddr, hostErr error, peerFQDN string, peer net.Addr, peerErr error) Peer {
+	if peer != nil {
+		if peerErr != nil {
+			return Peer{FQDN: peer.String(), IP: peer.String()}
+		} else {
+			return Peer{FQDN: peerFQDN, IP: peer.String()}
+		}
+	}
+
+	if host != nil {
+		if hostErr != nil {
+			return Peer{FQDN: host.String(), IP: host.String()}
+		} else {
+			return Peer{FQDN: hostFQDN, IP: host.IP.String()}
+		}
+	}
+
+	return Peer{FQDN: "Unknown", IP: "?.?.?.?"}
+}
