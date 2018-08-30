@@ -1,0 +1,5 @@
+*.png    -diff -merge
+*.png    linguist-generated=true
+
+.gitattributes export-ignore
+.gitignore export-ignore
