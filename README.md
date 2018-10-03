@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/github.com/erriapo/goping?status.png)](https://godoc.org/github.com/erriapo/goping)
+[![GoDoc](https://godoc.org/github.com/erriapo/goping?status.png)](https://godoc.org/github.com/erriapo/goping) [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](/LICENSE)
 
 ## Dependencies
 
